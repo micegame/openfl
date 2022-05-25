@@ -167,12 +167,19 @@ class TextEngine
 
 	private function createRestrictRegexp(restrict:String):EReg
 	{
-		var declinedRange = ~/\^(.+)/gu;
+		var declinedRange = ~/\^([^\^]+)/gu;
 		var declined = "";
 
+		var accepting = false;
 		var accepted = declinedRange.map(restrict, function(ereg)
 		{
+			if (accepting)
+			{
+				accepting = !accepting;
+				return ereg.matched(1);
+			}
 			declined += ereg.matched(1);
+			accepting = !accepting;
 			return "";
 		});
 
@@ -180,7 +187,7 @@ class TextEngine
 
 		if (accepted.length > 0)
 		{
-			testRegexpParts.push('[^$restrict]');
+			testRegexpParts.push('[^$accepted]');
 		}
 
 		if (declined.length > 0)
@@ -220,6 +227,7 @@ class TextEngine
 		if (font != null)
 		{
 			Font.__registeredFonts.push(font);
+			Font.__fontByName[font.fontName] = font;
 			return font;
 		}
 		#end
@@ -1956,7 +1964,8 @@ class TextEngine
 
 		var max = maxScrollV;
 
-		if (scrollV > max) return max - 1;
+		//TODO: Does maxScrollV return the wrong value(+1) in some cases?
+		if (scrollV > max) return max;
 
 		return scrollV;
 	}
@@ -1964,6 +1973,8 @@ class TextEngine
 	private function set_scrollV(value:Int):Int
 	{
 		if (value < 1) value = 1;
+		else if (value > maxScrollV) value = maxScrollV;
+
 		return scrollV = value;
 	}
 

@@ -2146,6 +2146,11 @@ class TextField extends InteractiveObject
 			__dirty = true;
 			__setRenderDirty();
 		}
+		else if (selectable)
+		{
+			__dirty = true;
+			__setRenderDirty();
+		}
 	}
 
 	@:noCompletion private function __startTextInput():Void
@@ -2397,9 +2402,15 @@ class TextField extends InteractiveObject
 		__textEngine.text = value;
 		__text = __textEngine.text;
 
+		// the current selection should be kept, but it should also be adjusted,
+		// if the new text is not long enough
+		if (__text.length < __selectionIndex)
+		{
+			__selectionIndex = __text.length;
+		}
 		if (__text.length < __caretIndex)
 		{
-			__selectionIndex = __caretIndex = __text.length;
+			__caretIndex = __text.length;
 		}
 
 		if (!__displayAsPassword #if (js && html5) || (DisplayObject.__supportDOM && !__renderedOnCanvasWhileOnDOM) #end)
@@ -2689,7 +2700,6 @@ class TextField extends InteractiveObject
 		#else
 		__updateText(value);
 		#end
-		__selectionIndex = __caretIndex = 0;
 
 		return value;
 	}
@@ -2946,7 +2956,6 @@ class TextField extends InteractiveObject
 		__isHTML = false;
 
 		__updateText(value);
-		__selectionIndex = __caretIndex = 0;
 
 		return value;
 	}
@@ -3181,6 +3190,10 @@ class TextField extends InteractiveObject
 		{
 			__startTextInput();
 		}
+		else if (type != INPUT && selectable && stage != null && stage.focus == this)
+		{
+			__startCursorTimer();
+		}
 	}
 
 	@:noCompletion private function this_onFocusOut(event:FocusEvent):Void
@@ -3241,6 +3254,10 @@ class TextField extends InteractiveObject
 			__dirty = true;
 			__setRenderDirty();
 		}
+
+		// stage could be null if the TextField was removed from stage in an
+		// earlier listener
+		if (stage == null) return;
 		#if !notextselectscroll
 		// Todo: Add flag and implementation for flash scrolling behavior.
 		stage.addEventListener(Event.ENTER_FRAME, this_onEnterFrame);
