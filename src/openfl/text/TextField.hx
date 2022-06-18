@@ -2223,7 +2223,7 @@ class TextField extends InteractiveObject
 
 			__layoutDirty = false;
 
-			// setSelection(__selectionIndex, __caretIndex);
+			setSelection(__selectionIndex, __caretIndex);
 		}
 	}
 
@@ -2821,9 +2821,6 @@ class TextField extends InteractiveObject
 	@:noCompletion private function set_scrollV(value:Int):Int
 	{
 		__updateLayout();
-
-		if (value > __textEngine.maxScrollV) value = __textEngine.maxScrollV;
-		if (value < 1) value = 1;
 
 		if (value != __textEngine.scrollV || __textEngine.scrollV == 0)
 		{
@@ -3554,7 +3551,6 @@ class TextField extends InteractiveObject
 	@:noCompletion private function window_onTextInput(value:String):Void
 	{
 		__replaceSelectedText(value, true);
-		setSelection(__selectionIndex, __caretIndex);
 
 		// TODO: Dispatch change if at max chars?
 		dispatchEvent(new Event(Event.CHANGE, true));
